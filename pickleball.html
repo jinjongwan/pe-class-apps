@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>피클볼 학습도구 - ○○고등학교</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; font-size: 14px; background: #f8f8f6; color: #1a1a1a; }
+  .header { background: #1D9E75; color: white; padding: 16px 20px; text-align: center; }
+  .header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .header p { font-size: 12px; opacity: 0.85; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .tab { padding: 9px 16px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .tab:hover { background: #f0f0f0; }
+  .tab.active { background: #E1F5EE; color: #085041; border-color: #5DCAA5; font-weight: 600; }
+  .section { display: none; }
+  .section.show { display: block; }
+
+  /* 통합 보기 */
+  .combined { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 620px) { .combined { grid-template-columns: 1fr; } }
+  .section-head { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #e0e0e0; }
+
+  /* 점수판 */
+  .score-board { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .team-box { background: #f5f5f3; border-radius: 12px; padding: 12px 8px; text-align: center; border: 1px solid #e8e8e8; }
+  .team-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .team-score { font-size: 36px; font-weight: 600; line-height: 1; color: #1a1a1a; }
+  .team-server { font-size: 11px; margin-top: 6px; min-height: 16px; }
+  .score-display { font-size: 14px; font-weight: 600; color: #555; background: #f5f5f3; border-radius: 8px; padding: 6px 10px; margin-bottom: 6px; white-space: nowrap; border: 1px solid #e8e8e8; }
+  .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  button { padding: 8px 14px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #333; cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.12s; }
+  button:hover { background: #f0f0f0; }
+  button:active { transform: scale(0.97); }
+  button.btn-a { background: #E1F5EE; color: #085041; border-color: #5DCAA5; font-weight: 500; }
+  button.btn-b { background: #FAECE7; color: #712B13; border-color: #F0997B; font-weight: 500; }
+  button.btn-reset { color: #888; }
+  .log-box { background: #f5f5f3; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #666; line-height: 1.9; max-height: 100px; overflow-y: auto; border: 1px solid #e8e8e8; }
+
+  /* 코트 */
+  .court-wrap { background: #f5f5f3; border-radius: 12px; padding: 12px; border: 1px solid #e8e8e8; }
+  svg.court { width: 100%; max-width: 480px; display: block; margin: 0 auto; }
+  .desc-box { background: #f5f5f3; border-radius: 8px; padding: 9px 12px; font-size: 12px; line-height: 1.8; margin-top: 10px; border: 1px solid #e8e8e8; color: #444; }
+  .perspective-badge { display: inline-block; font-size: 11px; padding: 4px 12px; border-radius: 8px; font-weight: 600; margin-bottom: 8px; }
+
+  /* 서브 탭 버튼 */
+  .score-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+  .score-btns span { font-size: 13px; font-weight: 600; margin-right: 4px; }
+  .score-btns button { padding: 6px 12px; font-size: 13px; }
+
+  /* 규칙 카드 */
+  .rule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .rule-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 14px 16px; }
+  .rule-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #222; }
+  .rule-body { font-size: 12px; color: #666; line-height: 1.9; }
+  .badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 8px; font-weight: 600; margin-right: 4px; }
+  .b-blue { background: #E6F1FB; color: #0C447C; }
+  .b-teal { background: #E1F5EE; color: #085041; }
+  .b-amber { background: #FAEEDA; color: #633806; }
+  .b-red { background: #FCEBEB; color: #791F1F; }
+  .tip-box { background: #E1F5EE; border-radius: 10px; padding: 12px 16px; font-size: 12px; color: #085041; margin-top: 14px; line-height: 1.9; border: 1px solid #9FE1CB; }
+  .tip-box strong { color: #04342C; }
+
+  .footer { text-align: center; font-size: 11px; color: #aaa; padding: 20px; margin-top: 10px; }
+
+  /* Simulation mode */
+  .sim-lvl{padding:8px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;color:#666;cursor:pointer;font-size:12px;font-weight:500;font-family:inherit;transition:all .15s}
+  .sim-lvl.active{background:#1D9E75;color:#fff;border-color:#1D9E75;font-weight:600}
+  .sim-lvl.done{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+  .sim-stat{background:#f5f5f3;border-radius:10px;padding:10px 18px;text-align:center;border:1px solid #e8e8e8;min-width:70px}
+  .sim-q-card{background:#fff;border:2px solid #e8e8e8;border-radius:14px;padding:20px;text-align:center;margin-bottom:16px;transition:all .3s}
+  .sim-q-card.correct{border-color:#1D9E75;background:#E1F5EE}
+  .sim-q-card.wrong{border-color:#E74C3C;background:#FCEBEB}
+  .sim-court-btn{flex:1;padding:20px 10px;border-radius:14px;border:2px solid #e8e8e8;background:#fff;cursor:pointer;font-family:inherit;font-size:14px;text-align:center;transition:all .2s;line-height:1.5}
+  .sim-court-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+  .sim-court-btn:active{transform:scale(.96)}
+  .sim-court-btn.left{border-left:4px solid #3498DB}.sim-court-btn.right{border-right:4px solid #E67E22}
+  .sim-court-btn.pick-correct{background:#E1F5EE;border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.3)}
+  .sim-court-btn.pick-wrong{background:#FCEBEB;border-color:#E74C3C;box-shadow:0 0 0 3px rgba(231,76,60,.3)}
+  .sim-court-btn.show-answer{border-color:#BA7517;background:#FAEEDA}
+  .sim-court-btn.disabled{pointer-events:none;opacity:.7}
+  .sim-fb{font-size:16px;font-weight:700;padding:10px;border-radius:10px;display:inline-block}
+  .sim-fb.ok{color:#085041;background:#E1F5EE}.sim-fb.no{color:#791F1F;background:#FCEBEB}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>피클볼 학습도구</h1>
+  <p>○○고등학교 체육 수업용 · 서브 위치 · 점수 계산 · 핵심 규칙</p>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('combined')">통합 보기</div>
+    <div class="tab" onclick="showTab('serve')">서브 위치</div>
+    <div class="tab" onclick="showTab('score')">점수 계산기</div>
+    <div class="tab" onclick="showTab('rules')">핵심 규칙</div>
+    <div class="tab" onclick="showTab('sim')">🎮 연습 모드</div>
+  </div>
+
+  <!-- ===== 통합 보기 ===== -->
+  <div class="section show" id="tab-combined">
+    <div class="combined">
+      <div>
+        <div class="section-head">점수 계산기</div>
+        <div class="score-board">
+          <div class="team-box">
+            <div class="team-label">우리 팀 (A)</div>
+            <div class="team-score" id="c-scoreA">0</div>
+            <div class="team-server" id="c-serverA" style="color:#085041;"></div>
+          </div>
+          <div style="text-align:center;">
+            <div class="score-display" id="c-score3num">0 - 0 - 2</div>
+            <div style="font-size:11px; color:#888;" id="c-serverTeam">A팀 서브</div>
+          </div>
+          <div class="team-box">
+            <div class="team-label">상대 팀 (B)</div>
+            <div class="team-score" id="c-scoreB">0</div>
+            <div class="team-server" id="c-serverB" style="color:#712B13;"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-a" onclick="cScorePoint('A')">A팀 랠리 승</button>
+          <button class="btn-b" onclick="cScorePoint('B')">B팀 랠리 승</button>
+          <button class="btn-reset" onclick="cReset()">초기화</button>
+        </div>
+        <div class="log-box" id="c-log">경기 시작! 0-0-2 → A팀 오른쪽에서 서브 시작</div>
+        <div class="desc-box" id="c-serve-desc">점수 0 (짝수) → A팀 오른쪽 베이스라인 밖에서 서브</div>
+      </div>
+
+      <div>
+        <div class="section-head">현재 서브 위치</div>
+        <div id="c-perspective-badge" class="perspective-badge" style="background:#E1F5EE; color:#085041;">A팀 서브 시점</div>
+        <div class="court-wrap">
+          <svg class="court" viewBox="0 0 320 410" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrC" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#BA7517"/>
+              </marker>
+            </defs>
+            <rect x="20" y="0" width="280" height="28" fill="#F1EFE8" rx="2"/>
+            <text id="c-top-label" x="160" y="17" text-anchor="middle" font-size="9" fill="#888">상대팀(B) 베이스라인 밖</text>
+            <rect x="20" y="295" width="280" height="28" fill="#F1EFE8" rx="2"/>
+            <text id="c-bot-label" x="160" y="313" text-anchor="middle" font-size="9" fill="#888">우리팀(A) 베이스라인 밖 (서브 구역)</text>
+            <rect x="20" y="28" width="280" height="267" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1.5"/>
+            <line x1="160" y1="28" x2="160" y2="295" stroke="#3B6D11" stroke-width="1.2"/>
+            <line x1="20" y1="100" x2="300" y2="100" stroke="#185FA5" stroke-width="1.5"/>
+            <line x1="20" y1="222" x2="300" y2="222" stroke="#185FA5" stroke-width="1.5"/>
+            <rect x="20" y="100" width="140" height="61" fill="#E6F1FB" fill-opacity="0.6"/>
+            <rect x="160" y="100" width="140" height="61" fill="#E6F1FB" fill-opacity="0.6"/>
+            <text x="90" y="134" text-anchor="middle" font-size="9" fill="#0C447C">키친</text>
+            <text x="230" y="134" text-anchor="middle" font-size="9" fill="#0C447C">키친</text>
+            <rect x="20" y="166" width="140" height="56" fill="#E6F1FB" fill-opacity="0.6"/>
+            <rect x="160" y="166" width="140" height="56" fill="#E6F1FB" fill-opacity="0.6"/>
+            <text x="90" y="197" text-anchor="middle" font-size="9" fill="#0C447C">키친</text>
+            <text x="230" y="197" text-anchor="middle" font-size="9" fill="#0C447C">키친</text>
+            <text id="c-top-l" x="90" y="68" text-anchor="middle" font-size="9" fill="#3B6D11">상대팀(B) 오른쪽</text>
+            <text id="c-top-r" x="230" y="68" text-anchor="middle" font-size="9" fill="#3B6D11">상대팀(B) 왼쪽</text>
+            <text id="c-bot-l" x="90" y="262" text-anchor="middle" font-size="9" fill="#3B6D11">우리팀(A) 왼쪽</text>
+            <text id="c-bot-r" x="230" y="262" text-anchor="middle" font-size="9" fill="#3B6D11">우리팀(A) 오른쪽</text>
+            <text x="28" y="166" font-size="9" fill="#888">왼쪽</text>
+            <text x="258" y="166" font-size="9" fill="#888">오른쪽</text>
+            <rect x="18" y="161" width="284" height="5" fill="#888"/>
+            <text x="160" y="158" text-anchor="middle" font-size="9" fill="#666">네트</text>
+            <line x1="20" y1="295" x2="300" y2="295" stroke="#3B6D11" stroke-width="2"/>
+            <line x1="20" y1="28" x2="300" y2="28" stroke="#3B6D11" stroke-width="2"/>
+            <line id="c-serve-arrow" x1="230" y1="296" x2="90" y2="65" stroke="#BA7517" stroke-width="2.5" stroke-dasharray="5,3" marker-end="url(#arrC)"/>
+            <circle id="c-target-dot" cx="90" cy="65" r="11" fill="#EF9F27" fill-opacity="0.85" stroke="#BA7517" stroke-width="1.5"/>
+            <text id="c-target-label" x="90" y="69" text-anchor="middle" font-size="9" font-weight="bold" fill="#633806">타겟</text>
+            <ellipse id="c-serve-ellipse" cx="230" cy="344" rx="48" ry="25" fill="#FAEEDA" fill-opacity="0.95" stroke="#BA7517" stroke-width="2"/>
+            <text id="c-serve-text" x="230" y="341" text-anchor="middle" font-size="12" font-weight="bold" fill="#633806">서버</text>
+            <text id="c-serve-sub" x="230" y="355" text-anchor="middle" font-size="8" fill="#854F0B">베이스라인 밖</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 서브 위치 ===== -->
+  <div class="section" id="tab-serve">
+    <p style="font-size:13px; color:#666; margin-bottom:14px;"><strong style="color:#1a1a1a;">1번 서버:</strong> 짝수=오른쪽, 홀수=왼쪽 &nbsp;|&nbsp; <strong style="color:#1a1a1a;">2번 서버:</strong> 짝수=<u>왼쪽</u>, 홀수=<u>오른쪽</u> (반대!)</p>
+    <div class="score-btns">
+      <span>서버 번호:</span>
+      <button onclick="setServerNum(1)" id="srvBtn1" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5;font-weight:600">1번</button>
+      <button onclick="setServerNum(2)" id="srvBtn2">2번</button>
+    </div>
+    <div class="score-btns">
+      <span>내 팀 점수:</span>
+      <button onclick="setMyScore(0)" id="btn0">0</button>
+      <button onclick="setMyScore(1)" id="btn1">1</button>
+      <button onclick="setMyScore(2)" id="btn2">2</button>
+      <button onclick="setMyScore(3)" id="btn3">3</button>
+      <button onclick="setMyScore(4)" id="btn4">4</button>
+      <button onclick="setMyScore(5)" id="btn5">5</button>
+    </div>
+    <div class="court-wrap">
+      <svg class="court" viewBox="0 0 520 410" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#BA7517"/>
+          </marker>
+        </defs>
+        <rect x="40" y="0" width="440" height="30" fill="#F1EFE8"/>
+        <rect x="40" y="300" width="440" height="30" fill="#F1EFE8"/>
+        <text x="260" y="18" text-anchor="middle" font-size="10" fill="#888">상대팀 베이스라인 밖</text>
+        <text x="260" y="318" text-anchor="middle" font-size="10" fill="#888">우리팀 베이스라인 밖 (서브 구역)</text>
+        <rect x="40" y="30" width="440" height="270" fill="#EAF3DE" stroke="#3B6D11" stroke-width="2"/>
+        <line x1="260" y1="30" x2="260" y2="300" stroke="#3B6D11" stroke-width="1.5"/>
+        <line x1="40" y1="107" x2="480" y2="107" stroke="#185FA5" stroke-width="2"/>
+        <line x1="40" y1="223" x2="480" y2="223" stroke="#185FA5" stroke-width="2"/>
+        <rect x="40" y="107" width="220" height="58" fill="#E6F1FB" fill-opacity="0.6"/>
+        <rect x="260" y="107" width="220" height="58" fill="#E6F1FB" fill-opacity="0.6"/>
+        <text x="150" y="140" text-anchor="middle" font-size="11" fill="#0C447C">키친(NVZ)</text>
+        <text x="370" y="140" text-anchor="middle" font-size="11" fill="#0C447C">키친(NVZ)</text>
+        <rect x="40" y="170" width="220" height="53" fill="#E6F1FB" fill-opacity="0.6"/>
+        <rect x="260" y="170" width="220" height="53" fill="#E6F1FB" fill-opacity="0.6"/>
+        <text x="150" y="200" text-anchor="middle" font-size="11" fill="#0C447C">키친(NVZ)</text>
+        <text x="370" y="200" text-anchor="middle" font-size="11" fill="#0C447C">키친(NVZ)</text>
+        <text x="150" y="72" text-anchor="middle" font-size="11" fill="#3B6D11">상대팀 오른쪽</text>
+        <text x="370" y="72" text-anchor="middle" font-size="11" fill="#3B6D11">상대팀 왼쪽</text>
+        <text x="150" y="265" text-anchor="middle" font-size="11" fill="#3B6D11">우리팀 왼쪽</text>
+        <text x="370" y="265" text-anchor="middle" font-size="11" fill="#3B6D11">우리팀 오른쪽</text>
+        <text x="52" y="170" font-size="11" fill="#888">왼쪽</text>
+        <text x="418" y="170" font-size="11" fill="#888">오른쪽</text>
+        <rect x="38" y="165" width="444" height="5" fill="#888"/>
+        <text x="260" y="162" text-anchor="middle" font-size="11" fill="#666">네트</text>
+        <line x1="40" y1="300" x2="480" y2="300" stroke="#3B6D11" stroke-width="2.5"/>
+        <line id="serve-arrow" x1="370" y1="301" x2="130" y2="70" stroke="#BA7517" stroke-width="2.5" stroke-dasharray="6,3" marker-end="url(#arr)"/>
+        <circle id="target-dot" cx="130" cy="70" r="14" fill="#EF9F27" fill-opacity="0.85" stroke="#BA7517" stroke-width="1.5"/>
+        <text id="target-label" x="130" y="74" text-anchor="middle" font-size="10" font-weight="bold" fill="#633806">타겟</text>
+        <ellipse id="serve-ellipse" cx="370" cy="348" rx="55" ry="27" fill="#FAEEDA" fill-opacity="0.95" stroke="#BA7517" stroke-width="2"/>
+        <text id="serve-text" x="370" y="345" text-anchor="middle" font-size="13" font-weight="bold" fill="#633806">서버</text>
+        <text id="serve-sub" x="370" y="361" text-anchor="middle" font-size="9" fill="#854F0B">베이스라인 밖</text>
+      </svg>
+    </div>
+    <div id="serve-desc" class="desc-box">1번 서버 · 점수 0 (짝수) → 오른쪽에서 서브 → 상대 대각선으로</div>
+    <div class="tip-box" style="margin-top:12px;">
+      <strong>핵심 원리:</strong> 사이드아웃 시 오른쪽에 선 선수가 1번 서버. 득점하면 팀원끼리 좌우 교대.<br>
+      <strong>1번 서버:</strong> 짝수=오른쪽, 홀수=왼쪽<br>
+      <strong>2번 서버:</strong> 짝수=왼쪽, 홀수=오른쪽 (1번과 반대!)<br>
+      서브는 반드시 베이스라인 밖에서, 키친을 넘어 <strong>대각선 백코트</strong> 안으로 넣어야 합니다.
+    </div>
+  </div>
+
+  <!-- ===== 점수 계산기 ===== -->
+  <div class="section" id="tab-score">
+    <p style="font-size:13px; color:#666; margin-bottom:14px;">버튼을 눌러 실제 경기처럼 점수를 진행해 보세요. 서브권과 서버 순서가 자동으로 바뀝니다.</p>
+    <div class="score-board">
+      <div class="team-box">
+        <div class="team-label">우리 팀 (A)</div>
+        <div class="team-score" id="scoreA">0</div>
+        <div class="team-server" id="serverA" style="color:#085041;"></div>
+      </div>
+      <div style="text-align:center;">
+        <div class="score-display" id="score3num">0 - 0 - 2</div>
+        <div style="font-size:12px; color:#888;" id="serverTeam">A팀 서브</div>
+      </div>
+      <div class="team-box">
+        <div class="team-label">상대 팀 (B)</div>
+        <div class="team-score" id="scoreB">0</div>
+        <div class="team-server" id="serverB" style="color:#712B13;"></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-a" onclick="scorePoint('A')">A팀 랠리 승</button>
+      <button class="btn-b" onclick="scorePoint('B')">B팀 랠리 승</button>
+      <button class="btn-reset" onclick="resetScore()">초기화</button>
+    </div>
+    <div class="log-box" id="log">경기 시작! 0-0-2 → A팀 오른쪽에서 서브 시작</div>
+  </div>
+
+  <!-- ===== 핵심 규칙 ===== -->
+  <div class="section" id="tab-rules">
+    <div class="rule-grid">
+      <div class="rule-card">
+        <div class="rule-title">점수 읽는 법 (3숫자)</div>
+        <div class="rule-body"><span class="badge b-blue">서브팀</span><span class="badge b-amber">리시브팀</span><span class="badge b-red">서버번호</span><br>예) <strong>4 - 3 - 1</strong><br>서브팀 4점, 리시브팀 3점, 1번 서버 서브 중</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">서버 번호 규칙</div>
+        <div class="rule-body">사이드아웃 시 <span class="badge b-blue">1번 서버</span> 먼저<br>1번 실점 → <span class="badge b-amber">2번 서버</span> 교체<br>2번도 실점 → 상대팀으로 서브권!<br>단, 게임 첫 서브만 <strong>2번부터</strong><br><span class="badge b-teal">이유: 선서브 유리 방지</span></div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">서브 위치 규칙</div>
+        <div class="rule-body"><strong>베이스라인 뒤</strong>에서 서브<br><span class="badge b-blue">1번 서버</span> 짝수→오른쪽, 홀수→왼쪽<br><span class="badge b-amber">2번 서버</span> 짝수→<u>왼쪽</u>, 홀수→<u>오른쪽</u><br>키친(NVZ) 너머 <strong>대각선 백코트</strong>로만<br><span class="badge b-red">NVZ 라인에 닿으면 폴트!</span></div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">서브 방법 (언더핸드)</div>
+        <div class="rule-body">팔이 <strong>위를 향하는 호</strong>를 그리며 타격<br>패들이 공을 치는 지점이 <strong>허리 아래</strong><br>패들 헤드가 <strong>손목 아래</strong>에 위치<br><span class="badge b-teal">드롭 서브</span>도 허용 (위 조건 면제)</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">키친 룰 (NVZ)</div>
+        <div class="rule-body">네트 앞 7피트 키친 구역에서 <strong>발리 금지!</strong><br><span class="badge b-red">발리 후 관성으로 들어가도 폴트</span><br>공이 키친에 바운드된 후엔 들어가서 쳐도 됨<br>발리 아닌 상황에서는 키친에 있어도 OK</div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">투바운스 룰</div>
+        <div class="rule-body">서브 후 <strong>리시브팀</strong>이 한 번 바운드 후 리턴<br>그 다음 <strong>서브팀</strong>도 한 번 바운드 후 리턴<br>→ 양쪽 각 1바운드 후부터 발리 가능<br><span class="badge b-teal">초보자 실수 1위!</span></div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">승리 조건</div>
+        <div class="rule-body"><strong>11점</strong> 선취 + <strong>2점 차</strong> 이상<br>10-10이면 연장 (2점 차까지)<br>대회에서는 15점 또는 21점제 가능<br><span class="badge b-teal">서브권 있는 팀만 득점!</span></div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-title">라인 콜 & 폴트</div>
+        <div class="rule-body">공이 라인에 닿으면 <strong>인(in)</strong><br><span class="badge b-red">단, 서브 시 NVZ 라인은 폴트</span><br>폴트 예: 네트에 걸림, 아웃, 키친 발리,<br>투바운스 전 발리, 서브 규칙 위반 등</div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <strong>학생들이 가장 헷갈려하는 TOP 3</strong><br>
+      1. 서브 위치: 1번 서버는 짝수=오른쪽, <strong>2번 서버는 짝수=왼쪽</strong> (서로 반대!)<br>
+      2. 투바운스 룰 — 서브 리턴 후 서브팀도 한 번 바운드 시킨 다음 쳐야 함<br>
+      3. 서브는 반드시 <strong>언더핸드</strong>로, 베이스라인 뒤에서, 대각선 NVZ 너머 백코트 안으로!
+    </div>
+  </div>
+  <!-- ===== 연습 모드 ===== -->
+  <div class="section" id="tab-sim">
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
+        <button onclick="setSimLevel(1)" id="lvl1" class="sim-lvl active">1단계: 기본 서브 위치</button>
+        <button onclick="setSimLevel(2)" id="lvl2" class="sim-lvl">2단계: 서버 번호</button>
+        <button onclick="setSimLevel(3)" id="lvl3" class="sim-lvl">3단계: 실전 상황</button>
+      </div>
+      <div id="sim-level-desc" style="font-size:13px;color:#666;margin-bottom:14px;">팀 점수를 보고 서브 위치(왼쪽/오른쪽)를 맞춰보세요!</div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="sim-stat"><span id="sim-streak" style="font-size:24px;font-weight:700;color:#1D9E75;">0</span><br><span style="font-size:11px;color:#888;">연속 정답</span></div>
+      <div class="sim-stat"><span id="sim-correct" style="font-size:24px;font-weight:700;color:#085041;">0</span><br><span style="font-size:11px;color:#888;">정답</span></div>
+      <div class="sim-stat"><span id="sim-total" style="font-size:24px;font-weight:700;color:#666;">0</span><br><span style="font-size:11px;color:#888;">총 문제</span></div>
+      <div class="sim-stat"><span id="sim-pct" style="font-size:24px;font-weight:700;color:#BA7517;">-</span><br><span style="font-size:11px;color:#888;">정답률</span></div>
+    </div>
+
+    <!-- Question -->
+    <div class="sim-q-card" id="sim-question">
+      <div id="sim-q-badge" style="margin-bottom:8px;"></div>
+      <div id="sim-q-text" style="font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:4px;"></div>
+      <div id="sim-q-sub" style="font-size:13px;color:#666;"></div>
+    </div>
+
+    <!-- Court answer area -->
+    <div style="max-width:400px;margin:0 auto;">
+      <div style="text-align:center;font-size:11px;color:#888;margin-bottom:6px;">서브 위치를 선택하세요!</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="simAnswer('left')" id="sim-left" class="sim-court-btn left">
+          <span style="font-size:28px;">👈</span><br>
+          <span style="font-weight:700;font-size:16px;">왼쪽</span><br>
+          <span style="font-size:11px;color:#888;">홀수(1번) / 짝수(2번)</span>
+        </button>
+        <button onclick="simAnswer('right')" id="sim-right" class="sim-court-btn right">
+          <span style="font-size:28px;">👉</span><br>
+          <span style="font-weight:700;font-size:16px;">오른쪽</span><br>
+          <span style="font-size:11px;color:#888;">짝수(1번) / 홀수(2번)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="sim-feedback" style="text-align:center;margin-top:14px;min-height:60px;"></div>
+
+    <!-- Explanation toggle -->
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn-reset" onclick="simNext()" id="sim-next-btn" style="display:none;padding:10px 28px;font-size:14px;font-weight:600;background:#1D9E75;color:#fff;border:none;border-radius:10px;">다음 문제 →</button>
+    </div>
+
+    <div class="tip-box" style="margin-top:20px;">
+      <strong>💡 연습 팁</strong><br>
+      • <strong>1단계:</strong> 1번 서버 기준으로 짝수=오른쪽, 홀수=왼쪽만 연습<br>
+      • <strong>2단계:</strong> 1번/2번 서버 구분까지! 2번 서버는 1번과 <u>반대</u><br>
+      • <strong>3단계:</strong> 실제 경기처럼 점수+서브팀+서버번호가 모두 나와요<br>
+      • 연속 5개 맞추면 다음 단계 도전!
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">○○고등학교 체육 수업용 · 2026학년도</div>
+
+<script>
+var myScore = 0;
+var myServerNum = 1;
+function setServerNum(n){
+  myServerNum=n;
+  document.getElementById('srvBtn1').style.background=n===1?'#E1F5EE':'';
+  document.getElementById('srvBtn1').style.color=n===1?'#085041':'';
+  document.getElementById('srvBtn1').style.borderColor=n===1?'#5DCAA5':'';
+  document.getElementById('srvBtn1').style.fontWeight=n===1?'600':'';
+  document.getElementById('srvBtn2').style.background=n===2?'#E1F5EE':'';
+  document.getElementById('srvBtn2').style.color=n===2?'#085041':'';
+  document.getElementById('srvBtn2').style.borderColor=n===2?'#5DCAA5':'';
+  document.getElementById('srvBtn2').style.fontWeight=n===2?'600':'';
+  updateServeTab();
+}
+function setMyScore(n) {
+  myScore = n;
+  for(var i=0;i<=5;i++){
+    document.getElementById('btn'+i).style.background='';
+    document.getElementById('btn'+i).style.color='';
+    document.getElementById('btn'+i).style.borderColor='';
+    document.getElementById('btn'+i).style.fontWeight='';
+  }
+  document.getElementById('btn'+n).style.background='#E1F5EE';
+  document.getElementById('btn'+n).style.color='#085041';
+  document.getElementById('btn'+n).style.borderColor='#5DCAA5';
+  document.getElementById('btn'+n).style.fontWeight='600';
+  updateServeTab();
+}
+function updateServeTab(){
+  var n=myScore, sn=myServerNum;
+  var even=n%2===0;
+  // 1번 서버: 짝수=오른쪽, 홀수=왼쪽 / 2번 서버: 반대
+  var onRight = (sn===1) ? even : !even;
+  var el=document.getElementById('serve-ellipse'),tx=document.getElementById('serve-text'),sub=document.getElementById('serve-sub');
+  var arrow=document.getElementById('serve-arrow'),dot=document.getElementById('target-dot'),tl=document.getElementById('target-label');
+  var desc=document.getElementById('serve-desc');
+  var side=onRight?'오른쪽':'왼쪽';
+  if(onRight){
+    el.setAttribute('cx','370');tx.setAttribute('x','370');sub.setAttribute('x','370');
+    arrow.setAttribute('x1','370');arrow.setAttribute('y1','301');arrow.setAttribute('x2','130');arrow.setAttribute('y2','70');
+    dot.setAttribute('cx','130');dot.setAttribute('cy','70');tl.setAttribute('x','130');tl.setAttribute('y','74');
+  } else {
+    el.setAttribute('cx','150');tx.setAttribute('x','150');sub.setAttribute('x','150');
+    arrow.setAttribute('x1','150');arrow.setAttribute('y1','301');arrow.setAttribute('x2','390');arrow.setAttribute('y2','70');
+    dot.setAttribute('cx','390');dot.setAttribute('cy','70');tl.setAttribute('x','390');tl.setAttribute('y','74');
+  }
+  desc.textContent=sn+'번 서버 · 점수 '+n+' ('+(even?'짝수':'홀수')+') → '+side+'에서 서브 → 상대 대각선으로';
+}
+
+var cState={sA:0,sB:0,servingTeam:'A',serverNum:2,logs:[],isFirstSeq:true};
+var sState={sA:0,sB:0,servingTeam:'A',serverNum:2,logs:[],isFirstSeq:true};
+
+function cUpdateCourt(){
+  var s=cState.servingTeam, score=s==='A'?cState.sA:cState.sB, even=score%2===0;
+  var sn=cState.serverNum;
+  // 핵심 규칙: 1번 서버는 짝수=오른쪽, 홀수=왼쪽 / 2번 서버는 반대
+  // 단, 게임 시작(0-0-2)에서는 서버2가 첫번째 서버 위치(오른쪽)에서 시작
+  var onRight;
+  if(cState.isFirstSeq && sn===2){
+    onRight = even; // 게임 첫 서비스: 서버2지만 첫번째 서버 위치 적용
+  } else {
+    onRight = (sn===1) ? even : !even;
+  }
+  var badge=document.getElementById('c-perspective-badge');
+  var topLabel=document.getElementById('c-top-label'),botLabel=document.getElementById('c-bot-label');
+  var topL=document.getElementById('c-top-l'),topR=document.getElementById('c-top-r');
+  var botL=document.getElementById('c-bot-l'),botR=document.getElementById('c-bot-r');
+  var el=document.getElementById('c-serve-ellipse'),tx=document.getElementById('c-serve-text');
+  var sub=document.getElementById('c-serve-sub'),arrow=document.getElementById('c-serve-arrow');
+  var dot=document.getElementById('c-target-dot'),tl=document.getElementById('c-target-label');
+  var desc=document.getElementById('c-serve-desc');
+  var side=onRight?'오른쪽':'왼쪽';
+  if(s==='A'){
+    badge.textContent='A팀 서브 시점 ('+sn+'번 서버)';badge.style.background='#E1F5EE';badge.style.color='#085041';
+    topLabel.textContent='상대팀(B) 베이스라인 밖';
+    botLabel.textContent='우리팀(A) 베이스라인 밖 (서브 구역)';
+    topL.textContent='상대팀(B) 오른쪽';topR.textContent='상대팀(B) 왼쪽';
+    botL.textContent='우리팀(A) 왼쪽';botR.textContent='우리팀(A) 오른쪽';
+    el.setAttribute('cy','344');tx.setAttribute('y','341');sub.setAttribute('y','355');
+    if(onRight){
+      el.setAttribute('cx','230');tx.setAttribute('x','230');sub.setAttribute('x','230');
+      arrow.setAttribute('x1','230');arrow.setAttribute('y1','296');arrow.setAttribute('x2','90');arrow.setAttribute('y2','65');
+      dot.setAttribute('cx','90');dot.setAttribute('cy','65');tl.setAttribute('x','90');tl.setAttribute('y','69');
+    } else {
+      el.setAttribute('cx','90');tx.setAttribute('x','90');sub.setAttribute('x','90');
+      arrow.setAttribute('x1','90');arrow.setAttribute('y1','296');arrow.setAttribute('x2','230');arrow.setAttribute('y2','65');
+      dot.setAttribute('cx','230');dot.setAttribute('cy','65');tl.setAttribute('x','230');tl.setAttribute('y','69');
+    }
+    desc.textContent='점수 '+score+' ('+sn+'번 서버) → A팀 '+side+'에서 서브 → 대각선으로';
+  } else {
+    badge.textContent='B팀 서브 시점 ('+sn+'번 서버)';badge.style.background='#FAEEDA';badge.style.color='#633806';
+    topLabel.textContent='상대팀(B) 베이스라인 밖 (서브 구역)';
+    botLabel.textContent='우리팀(A) 베이스라인 밖';
+    topL.textContent='상대팀(B) 오른쪽';topR.textContent='상대팀(B) 왼쪽';
+    botL.textContent='우리팀(A) 왼쪽';botR.textContent='우리팀(A) 오른쪽';
+    el.setAttribute('cy','18');tx.setAttribute('y','15');sub.setAttribute('y','26');
+    // B팀은 화면상 반전: B의 오른쪽=화면 왼쪽(x=90)
+    if(onRight){
+      el.setAttribute('cx','90');tx.setAttribute('x','90');sub.setAttribute('x','90');
+      arrow.setAttribute('x1','90');arrow.setAttribute('y1','42');arrow.setAttribute('x2','230');arrow.setAttribute('y2','258');
+      dot.setAttribute('cx','230');dot.setAttribute('cy','258');tl.setAttribute('x','230');tl.setAttribute('y','262');
+    } else {
+      el.setAttribute('cx','230');tx.setAttribute('x','230');sub.setAttribute('x','230');
+      arrow.setAttribute('x1','230');arrow.setAttribute('y1','42');arrow.setAttribute('x2','90');arrow.setAttribute('y2','258');
+      dot.setAttribute('cx','90');dot.setAttribute('cy','258');tl.setAttribute('x','90');tl.setAttribute('y','262');
+    }
+    desc.textContent='점수 '+score+' ('+sn+'번 서버) → B팀 '+side+'에서 서브 → 대각선으로';
+  }
+}
+
+function cLog(msg){cState.logs.unshift(msg);if(cState.logs.length>8)cState.logs.pop();document.getElementById('c-log').innerHTML=cState.logs.join('<br>');}
+function cUpdateUI(){
+  document.getElementById('c-scoreA').textContent=cState.sA;
+  document.getElementById('c-scoreB').textContent=cState.sB;
+  var s=cState.servingTeam,n=cState.serverNum;
+  document.getElementById('c-score3num').textContent=(s==='A'?cState.sA+' - '+cState.sB:cState.sB+' - '+cState.sA)+' - '+n;
+  document.getElementById('c-serverTeam').textContent=s+'팀 서브 중';
+  document.getElementById('c-serverA').textContent=s==='A'?n+'번 서버':'';
+  document.getElementById('c-serverB').textContent=s==='B'?n+'번 서버':'';
+  cUpdateCourt();
+  if(cState.sA>=11&&cState.sA-cState.sB>=2)cLog('A팀 승리!');
+  if(cState.sB>=11&&cState.sB-cState.sA>=2)cLog('B팀 승리!');
+}
+function cScorePoint(team){
+  if(team===cState.servingTeam){
+    // 서브팀 득점 → 점수 올라가고 서브 유지 (좌우 스위치)
+    if(team==='A')cState.sA++;else cState.sB++;
+    cLog('✅ '+team+'팀 득점! '+cState.sA+'-'+cState.sB+' ('+cState.serverNum+'번 서버 유지, 좌우 교대)');
+  } else {
+    // 비서브팀이 랠리 승리 → 점수 없음, 서브만 변경
+    if(cState.serverNum===1){
+      cState.serverNum=2;
+      cLog('❌ '+cState.servingTeam+'팀 1번 서버 실점 → 2번 서버로 교체 (점수 변동 없음)');
+    }else{
+      var oldTeam=cState.servingTeam;
+      cState.serverNum=1;cState.servingTeam=team;
+      cState.isFirstSeq=false; // 첫 서비스 시퀀스 종료
+      cLog('🔄 사이드아웃! '+oldTeam+'팀 2번 서버 실점 → '+team+'팀 1번 서버로 (점수 변동 없음)');
+    }
+  }
+  cUpdateUI();
+}
+function cReset(){cState={sA:0,sB:0,servingTeam:'A',serverNum:2,logs:[],isFirstSeq:true};cLog('경기 시작! 0-0-2 → A팀 오른쪽에서 서브 시작');cUpdateUI();}
+
+function sLog(msg){sState.logs.unshift(msg);if(sState.logs.length>8)sState.logs.pop();document.getElementById('log').innerHTML=sState.logs.join('<br>');}
+function sUpdateUI(){
+  document.getElementById('scoreA').textContent=sState.sA;
+  document.getElementById('scoreB').textContent=sState.sB;
+  var s=sState.servingTeam,n=sState.serverNum;
+  document.getElementById('score3num').textContent=(s==='A'?sState.sA+' - '+sState.sB:sState.sB+' - '+sState.sA)+' - '+n;
+  document.getElementById('serverTeam').textContent=s+'팀 서브 중';
+  document.getElementById('serverA').textContent=s==='A'?n+'번 서버':'';
+  document.getElementById('serverB').textContent=s==='B'?n+'번 서버':'';
+  if(sState.sA>=11&&sState.sA-sState.sB>=2)sLog('A팀 승리!');
+  if(sState.sB>=11&&sState.sB-sState.sA>=2)sLog('B팀 승리!');
+}
+function scorePoint(team){
+  if(team===sState.servingTeam){
+    if(team==='A')sState.sA++;else sState.sB++;
+    sLog('✅ '+team+'팀 득점! '+sState.sA+'-'+sState.sB+' ('+sState.serverNum+'번 서버 유지, 좌우 교대)');
+  } else {
+    if(sState.serverNum===1){
+      sState.serverNum=2;
+      sLog('❌ '+sState.servingTeam+'팀 1번 서버 실점 → 2번 서버로 교체 (점수 변동 없음)');
+    }else{
+      var oldTeam=sState.servingTeam;
+      sState.serverNum=1;sState.servingTeam=team;sState.isFirstSeq=false;
+      sLog('🔄 사이드아웃! '+oldTeam+'팀 2번 서버 실점 → '+team+'팀 1번 서버로 (점수 변동 없음)');
+    }
+  }
+  sUpdateUI();
+}
+function resetScore(){sState={sA:0,sB:0,servingTeam:'A',serverNum:2,logs:[],isFirstSeq:true};sLog('경기 시작! 0-0-2 → A팀 오른쪽에서 서브 시작');sUpdateUI();}
+
+function showTab(name){
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('show');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('show');
+  var idx={combined:0,serve:1,score:2,rules:3,sim:4};
+  document.querySelectorAll('.tab')[idx[name]].classList.add('active');
+  if(name==='sim')simNext();
+}
+
+// ═══ SIMULATION MODE ═══
+var sim={level:1,streak:0,correct:0,total:0,currentQ:null,answered:false};
+
+function setSimLevel(lv){
+  sim.level=lv;sim.streak=0;sim.correct=0;sim.total=0;
+  document.querySelectorAll('.sim-lvl').forEach(function(b){b.classList.remove('active')});
+  document.getElementById('lvl'+lv).classList.add('active');
+  var descs={
+    1:'1번 서버 기준! 팀 점수를 보고 서브 위치(왼쪽/오른쪽)를 맞춰보세요.',
+    2:'서버 번호(1번/2번)에 따라 위치가 달라져요. 2번은 1번과 반대!',
+    3:'실전! 서브팀, 점수, 서버번호가 모두 랜덤. 실제 경기처럼 판단해보세요.'
+  };
+  document.getElementById('sim-level-desc').textContent=descs[lv];
+  updateSimStats();
+  simNext();
+}
+
+function genQuestion(){
+  var lv=sim.level;
+  var score=Math.floor(Math.random()*11);
+  var serverNum,team,isFirstSeq=false;
+
+  if(lv===1){
+    serverNum=1;team='우리팀';
+  } else if(lv===2){
+    serverNum=Math.random()<0.5?1:2;team='우리팀';
+    // Sometimes show the game-start special case
+    if(Math.random()<0.15){score=0;serverNum=2;isFirstSeq=true;}
+  } else {
+    serverNum=Math.random()<0.5?1:2;
+    team=Math.random()<0.5?'A팀':'B팀';
+    if(Math.random()<0.1){score=0;serverNum=2;isFirstSeq=true;}
+  }
+
+  var even=score%2===0;
+  var onRight;
+  if(isFirstSeq&&serverNum===2){onRight=even;}
+  else{onRight=(serverNum===1)?even:!even;}
+
+  return{score:score,serverNum:serverNum,team:team,isFirstSeq:isFirstSeq,answer:onRight?'right':'left',even:even,level:lv};
+}
+
+function simNext(){
+  sim.answered=false;
+  sim.currentQ=genQuestion();
+  var q=sim.currentQ;
+
+  // Reset UI
+  document.getElementById('sim-left').className='sim-court-btn left';
+  document.getElementById('sim-right').className='sim-court-btn right';
+  document.getElementById('sim-feedback').innerHTML='';
+  document.getElementById('sim-next-btn').style.display='none';
+  document.getElementById('sim-question').className='sim-q-card';
+
+  // Question badge
+  var badge='';
+  if(q.level===1){
+    badge='<span class="badge b-blue">1번 서버</span>';
+  } else if(q.level===2){
+    badge='<span class="badge '+(q.serverNum===1?'b-blue':'b-amber')+'">'+(q.serverNum)+'번 서버</span>';
+    if(q.isFirstSeq)badge+=' <span class="badge b-red">게임 시작</span>';
+  } else {
+    badge='<span class="badge b-teal">'+q.team+' 서브</span> <span class="badge '+(q.serverNum===1?'b-blue':'b-amber')+'">'+(q.serverNum)+'번 서버</span>';
+    if(q.isFirstSeq)badge+=' <span class="badge b-red">게임 시작</span>';
+  }
+  document.getElementById('sim-q-badge').innerHTML=badge;
+
+  // Question text
+  var qText='점수: <span style="font-size:26px;color:#1D9E75;">'+q.score+'</span>';
+  if(q.level===3) qText=q.team+' 점수: <span style="font-size:26px;color:#1D9E75;">'+q.score+'</span>';
+  document.getElementById('sim-q-text').innerHTML=qText;
+
+  var sub='점수 '+q.score+'은 '+(q.even?'짝수':'홀수')+'입니다. 어느 쪽에서 서브할까요?';
+  document.getElementById('sim-q-sub').textContent=sub;
+}
+
+function simAnswer(pick){
+  if(sim.answered)return;
+  sim.answered=true;
+  sim.total++;
+  var q=sim.currentQ;
+  var isCorrect=(pick===q.answer);
+
+  if(isCorrect){
+    sim.correct++;sim.streak++;
+    document.getElementById('sim-question').className='sim-q-card correct';
+    document.getElementById('sim-'+pick).classList.add('pick-correct');
+    var msg='🎉 정답!';
+    if(sim.streak>=5)msg='🔥 '+sim.streak+'연속 정답!';
+    else if(sim.streak>=3)msg='👏 '+sim.streak+'연속!';
+    document.getElementById('sim-feedback').innerHTML='<div class="sim-fb ok">'+msg+'</div>';
+  } else {
+    sim.streak=0;
+    document.getElementById('sim-question').className='sim-q-card wrong';
+    document.getElementById('sim-'+pick).classList.add('pick-wrong');
+    document.getElementById('sim-'+(q.answer==='right'?'right':'left')).classList.add('show-answer');
+
+    var reason='';
+    if(q.isFirstSeq){
+      reason='게임 시작(0-0-2)은 항상 오른쪽에서 서브!';
+    } else if(q.serverNum===1){
+      reason='1번 서버: 짝수→오른쪽, 홀수→왼쪽<br>점수 '+q.score+'은 '+(q.even?'짝수→오른쪽':'홀수→왼쪽');
+    } else {
+      reason='2번 서버: 짝수→왼쪽, 홀수→오른쪽 (1번과 반대!)<br>점수 '+q.score+'은 '+(q.even?'짝수→왼쪽':'홀수→오른쪽');
+    }
+    document.getElementById('sim-feedback').innerHTML='<div class="sim-fb no">❌ 오답</div><div style="font-size:13px;color:#666;margin-top:8px;line-height:1.7;">'+reason+'</div>';
+  }
+
+  document.getElementById('sim-left').classList.add('disabled');
+  document.getElementById('sim-right').classList.add('disabled');
+  document.getElementById('sim-next-btn').style.display='inline-block';
+  updateSimStats();
+
+  // Auto advance if correct (short delay)
+  if(isCorrect){setTimeout(function(){if(sim.answered)simNext()},1200);}
+}
+
+function updateSimStats(){
+  document.getElementById('sim-streak').textContent=sim.streak;
+  document.getElementById('sim-correct').textContent=sim.correct;
+  document.getElementById('sim-total').textContent=sim.total;
+  document.getElementById('sim-pct').textContent=sim.total>0?Math.round(sim.correct/sim.total*100)+'%':'-';
+
+  // Level up suggestion
+  if(sim.streak>=5&&sim.level<3){
+    var fb=document.getElementById('sim-feedback');
+    if(fb.innerHTML.indexOf('다음 단계')===-1){
+      fb.innerHTML+='<div style="margin-top:8px;"><button onclick="setSimLevel('+(sim.level+1)+')" style="padding:8px 18px;border-radius:8px;border:2px solid #1D9E75;background:#E1F5EE;color:#085041;font-weight:600;cursor:pointer;font-family:inherit;">🚀 '+(sim.level+1)+'단계에 도전!</button></div>';
+    }
+  }
+}
+
+setServerNum(1);
+setMyScore(0);
+cUpdateUI();
+sUpdateUI();
+</script>
+</body>
+</html>
